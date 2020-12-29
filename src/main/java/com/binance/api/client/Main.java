@@ -86,4 +86,21 @@ public class Main {
         System.out.println("Bought " + btcWallet + " bitcoin for $" + usdtWallet);
         usdtWallet = 0.00;
     }
+
+    public double calculateSMA(double[] data) {
+        double sum = 0;
+        for (int i = 0; i < 20; i++) {
+            sum += data[i];
+        }
+
+        return sum / data.length;
+    }
+
+    public double calculateEMA(double c, double p) {
+        double k = 0.095238;
+
+        double EMA = (k / (c - p)) + p;
+
+        return EMA;
+    }
 }
