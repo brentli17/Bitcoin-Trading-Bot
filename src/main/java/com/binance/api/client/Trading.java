@@ -1,7 +1,6 @@
 package com.binance.api.client;
 
 import com.binance.api.client.domain.market.TickerStatistics;
-import java.util.Scanner;
 
 class Trading {
     private double previousPrice;   //price of btc in previous transaction
@@ -14,13 +13,13 @@ class Trading {
     public long tradingFrequency;   //how often the bot will check the price of BTC (using binance api)
 
     //constructor
-    public Trading(double previousPrice, double transactionThreshold, double usdtWallet, double btcWallet, long tradingFrequency){
+    public Trading(double previousPrice, double transactionThreshold, double usdtWallet, double btcWallet, long tradingFrequency, String lastTransaction){
         this.previousPrice = previousPrice;
         this.transactionThreshold = transactionThreshold;
         this.usdtWallet = usdtWallet;
         this.btcWallet = btcWallet;
         this.tradingFrequency = tradingFrequency;
-        lastTransaction = "";
+        this.lastTransaction = lastTransaction;
         currentPrice = 0.00;
         stopTrading = false;
     }

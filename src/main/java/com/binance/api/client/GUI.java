@@ -13,6 +13,18 @@ class GUI implements ActionListener {
     JMenuItem a1;
     JMenuItem a2;
 
+    //data points to display in the window
+    double threshold;
+    long frequency;
+    double btcHeld;
+    double usdtHeld;
+    String btcPrice;
+    int gainSinceStart;
+    double prevPrice;
+    String prevTransaction;
+
+    Trading trading;
+
     public void startWindow(){
         //create window
         JFrame frame = new JFrame("Bitcoin Trading Bot");
@@ -66,24 +78,36 @@ class GUI implements ActionListener {
 
             System.out.println(file.getPath());
 
-            String lastLine = "";
+            String lastLine = "";   //last transaction
+            String firstLine = "";  //bot settings (threshold, frequency)
+
             Scanner scanner = null;
             try {
                 scanner = new Scanner(file);
             } catch (FileNotFoundException fileNotFoundException) {
-                fileNotFoundException.printStackTrace();
+                System.out.println("File not found");   //TODO: Pop up error window
             }
+            firstLine = scanner.nextLine();
             while(scanner.hasNextLine()){  //read last line of inputted file
                 lastLine = scanner.nextLine();
             }
+
+            //parse file
+            String[] transactionInfo = lastLine.split(" / "); // time,btc held,usdt held,price of btc,gain
+
         }
 
         else if(e.getSource() == a1){   //start trading
-
+            trading = new Trading(prevPrice, threshold, usdtHeld, btcHeld, frequency, prevTransaction);
+            try {
+                trading.tradingMain();
+            } catch (InterruptedException interruptedException) {
+                System.out.println("failed");
+            }
         }
 
         else if(e.getSource() == a2){   //stop trading
-
+            trading.setStopTrading(true);
         }
     }
 }
