@@ -45,7 +45,7 @@ class Trading {
                     sell(currentPrice);
                     previousPrice = currentPrice;
                 }
-                else if(lastTransaction.equals("sell") && (change > -transactionThreshold)){ //need to buy
+                else if(lastTransaction.equals("sell") && (change < transactionThreshold)){ //need to buy
                     System.out.println("\nCurrent Price: " + currentPrice + "    Previous Price: " + previousPrice);
                     System.out.println("Buying...");
                     buy(currentPrice);

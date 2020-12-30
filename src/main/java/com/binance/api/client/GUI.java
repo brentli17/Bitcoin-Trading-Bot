@@ -5,24 +5,21 @@ import java.awt.*;
 import java.util.*;
 import javax.swing.*;
 import java.awt.event.*;
+import javax.swing.border.*;
 
 class GUI implements ActionListener {
-    private JMenuItem s1;
-    private JMenuItem s2;
-    private JMenuItem a1;
-    private JMenuItem a2;
+    private JMenuItem s1, s2, a1, a2;
+    private JTextField t1, t2, t3, t4, t5, t6;
+    private JFrame manualInputFrame;
+    JButton submit;
 
     private Trading trading;
 
     //data points to display in the window
-    public double threshold;
+    public double threshold, btcHeld, usdtHeld, prevPrice;
     public long frequency;
-    public double btcHeld;
-    public double usdtHeld;
-    public String btcPrice;
     public int gainSinceStart;
-    public double prevPrice;
-    public String prevTransaction;
+    public String btcPrice, prevTransaction;
 
 
     public void startWindow(){
@@ -65,10 +62,58 @@ class GUI implements ActionListener {
         frame.setVisible(true);
     }
 
+    public void openManualInputWindow(){
+        manualInputFrame = new JFrame("Input parameters");
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        //create text fields
+        t1 = new JTextField("Bitcoin Balance(x)");
+        t2 = new JTextField("USD Balance($x.xx)");
+        t3 = new JTextField("Price During Previous Transaction ($x.xx)");
+        t4 = new JTextField("Previous Transaction Type (buy/sell)");
+        t5 = new JTextField("Price Threshold ($x.xx)");
+        t6 = new JTextField("Update Frequency (s)");
+
+        //set bounds for text fields
+        t1.setBounds(50, 100, 200, 30);
+        t2.setBounds(50, 100, 200, 30);
+        t3.setBounds(50, 100, 200, 30);
+        t4.setBounds(50, 100, 200, 30);
+        t5.setBounds(50, 100, 200, 30);
+        t6.setBounds(50, 100, 200, 30);
+
+        //create submit button
+        submit = new JButton("Submit");
+        submit.addActionListener(this);
+
+        //add text fields and button to JFrame
+        panel.add(t1);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(t2);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(t3);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(t4);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(t5);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(t6);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(submit);
+
+        //JFrame constraints
+        panel.setBorder(new EmptyBorder(new Insets(20, 20, 20, 20)));
+        manualInputFrame.add(panel);
+        manualInputFrame.setSize(300,600);
+        manualInputFrame.setLocationRelativeTo(null);
+        manualInputFrame.setVisible(true);
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == s1){        //Start with manual input
-
+            openManualInputWindow();
         }
 
         else if(e.getSource() == s2){   //start with log
@@ -116,6 +161,16 @@ class GUI implements ActionListener {
 
         else if(e.getSource() == a2){   //stop trading
             trading.setStopTrading(true);
+        }
+
+        else if(e.getSource() == submit){   //user wants to submit manually entered values
+            btcHeld = Double.parseDouble(t1.getText());
+            usdtHeld = Double.parseDouble(t2.getText());
+            prevPrice = Double.parseDouble(t3.getText());
+            prevTransaction = t4.getText();
+            threshold = Double.parseDouble(t5.getText());
+            frequency = Long.parseLong(t6.getText());
+            manualInputFrame.dispose();
         }
     }
 }
