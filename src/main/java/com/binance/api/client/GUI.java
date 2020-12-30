@@ -93,8 +93,15 @@ class GUI implements ActionListener {
             }
 
             //parse file
-            String[] transactionInfo = lastLine.split(" / "); // time,btc held,usdt held,price of btc,gain
+            String[] transactionInfo = lastLine.split(","); // time,btc held,usdt held,price of btc,last transaction,gain
+            String[] botSettings = firstLine.split(",");    // threshold,frequency
 
+            btcHeld = Double.parseDouble(transactionInfo[1]);
+            usdtHeld = Double.parseDouble(transactionInfo[2]);
+            prevPrice = Double.parseDouble(transactionInfo[3]);
+            prevTransaction = transactionInfo[4];
+            threshold = Double.parseDouble(botSettings[0]);
+            frequency = Long.parseLong(botSettings[1]);
         }
 
         else if(e.getSource() == a1){   //start trading
