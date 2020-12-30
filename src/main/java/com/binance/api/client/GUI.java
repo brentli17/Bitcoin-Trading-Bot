@@ -1,29 +1,29 @@
 package com.binance.api.client;
 
-import javax.swing.*;
+import java.io.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.FileNotFoundException;
-import java.util.Scanner;
+import java.util.*;
+import javax.swing.*;
+import java.awt.event.*;
 
 class GUI implements ActionListener {
-    JMenuItem s1;
-    JMenuItem s2;
-    JMenuItem a1;
-    JMenuItem a2;
+    private JMenuItem s1;
+    private JMenuItem s2;
+    private JMenuItem a1;
+    private JMenuItem a2;
+
+    private Trading trading;
 
     //data points to display in the window
-    double threshold;
-    long frequency;
-    double btcHeld;
-    double usdtHeld;
-    String btcPrice;
-    int gainSinceStart;
-    double prevPrice;
-    String prevTransaction;
+    public double threshold;
+    public long frequency;
+    public double btcHeld;
+    public double usdtHeld;
+    public String btcPrice;
+    public int gainSinceStart;
+    public double prevPrice;
+    public String prevTransaction;
 
-    Trading trading;
 
     public void startWindow(){
         //create window
@@ -96,6 +96,7 @@ class GUI implements ActionListener {
             String[] transactionInfo = lastLine.split(","); // time,btc held,usdt held,price of btc,last transaction,gain
             String[] botSettings = firstLine.split(",");    // threshold,frequency
 
+            //set parameters
             btcHeld = Double.parseDouble(transactionInfo[1]);
             usdtHeld = Double.parseDouble(transactionInfo[2]);
             prevPrice = Double.parseDouble(transactionInfo[3]);

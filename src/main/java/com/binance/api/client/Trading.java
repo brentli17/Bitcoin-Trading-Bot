@@ -28,7 +28,7 @@ class Trading {
         BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
         BinanceApiRestClient client = factory.newRestClient();
 
-        double change;
+        double change;  //$ difference in BTC price since last transaction
 
         //main loop. as long as this runs, the bot will continue to trade
         while(!stopTrading){
@@ -38,20 +38,19 @@ class Trading {
             change = currentPrice - previousPrice;
             System.out.println(currentPrice + " $" + change);
 
-            if(Math.abs(change) > transactionThreshold){
-                System.out.println();
-                System.out.println("Current Price: " + currentPrice + "    Previous Price: " + previousPrice);
-                if(lastTransaction.equals("buy") && (change > transactionThreshold)){
+            if(Math.abs(change) >= transactionThreshold){
+                if(lastTransaction.equals("buy") && (change > transactionThreshold)){   //need to sell
+                    System.out.println("\nCurrent Price: " + currentPrice + "    Previous Price: " + previousPrice);
                     System.out.println("Selling...");
                     sell(currentPrice);
                     previousPrice = currentPrice;
                 }
-                else if(lastTransaction.equals("sell") && (change > transactionThreshold)){
+                else if(lastTransaction.equals("sell") && (change > -transactionThreshold)){ //need to buy
+                    System.out.println("\nCurrent Price: " + currentPrice + "    Previous Price: " + previousPrice);
                     System.out.println("Buying...");
                     buy(currentPrice);
                     previousPrice = currentPrice;
                 }
-                System.out.println();
             }
             Thread.sleep(tradingFrequency * 1000);    //wait 1 second
         }
@@ -60,14 +59,14 @@ class Trading {
     public void sell(double price){
         lastTransaction = "sell";
         usdtWallet = btcWallet * currentPrice;
-        System.out.println("Sold " + btcWallet + " bitcoin for $" + usdtWallet);
+        System.out.println("Sold " + btcWallet + " bitcoin for $" + usdtWallet + "\n");
         btcWallet = 0.00;
     }
 
     public void buy(double price){
         lastTransaction = "buy";
         btcWallet = usdtWallet / currentPrice;
-        System.out.println("Bought " + btcWallet + " bitcoin for $" + usdtWallet);
+        System.out.println("Bought " + btcWallet + " bitcoin for $" + usdtWallet + "\n");
         usdtWallet = 0.00;
     }
 
