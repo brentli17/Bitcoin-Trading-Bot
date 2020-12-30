@@ -1,14 +1,10 @@
 package com.binance.api.client;
 
-import com.sun.tools.sjavac.server.Sjavac;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.Scanner;
 
 class GUI implements ActionListener {
@@ -68,12 +64,18 @@ class GUI implements ActionListener {
             fileChooser.showOpenDialog(null);   //open file chooser
             java.io.File file = fileChooser.getSelectedFile();
 
+            System.out.println(file.getPath());
+
             String lastLine = "";
-            Scanner scanner = new Scanner(System.in);
-            while(scanner.nextLine() != null){  //read last line of inputted file
+            Scanner scanner = null;
+            try {
+                scanner = new Scanner(file);
+            } catch (FileNotFoundException fileNotFoundException) {
+                fileNotFoundException.printStackTrace();
+            }
+            while(scanner.hasNextLine()){  //read last line of inputted file
                 lastLine = scanner.nextLine();
             }
-            System.out.println(lastLine);
         }
 
         else if(e.getSource() == a1){   //start trading
