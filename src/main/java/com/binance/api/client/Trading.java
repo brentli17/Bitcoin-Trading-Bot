@@ -4,40 +4,35 @@ import com.binance.api.client.domain.market.TickerStatistics;
 import java.util.Scanner;
 
 class Trading {
-    private static double previousPrice;
-    private static double currentPrice;
-    private static double usdtWallet;
-    private static double btcWallet;
-    private static double transactionThreshold; //min change in bitcoin price to warrant a transaction
-    private static String lastTransaction;  //last transaction type that was carried out (buy/sell)
+    private double previousPrice;   //price of btc in previous transaction
+    private double currentPrice;    //current price of bitcoin
+    private double usdtWallet;      //currently held $ in USD
+    private double btcWallet;       //currently held $ in BTC
+    private double transactionThreshold; //min change in bitcoin price to warrant a transaction
+    private String lastTransaction; //last transaction type that was carried out (buy/sell)
+    public boolean stopTrading;     //boolean to start and stop trading
+    public long tradingFrequency;   //how often the bot will check the price of BTC (using binance api)
 
-    public Trading(){
-        previousPrice = 0.00;
-        currentPrice = 0.00;
-        transactionThreshold = 0.00;
+    //constructor
+    public Trading(double previousPrice, double transactionThreshold, double usdtWallet, double btcWallet, long tradingFrequency){
+        this.previousPrice = previousPrice;
+        this.transactionThreshold = transactionThreshold;
+        this.usdtWallet = usdtWallet;
+        this.btcWallet = btcWallet;
+        this.tradingFrequency = tradingFrequency;
         lastTransaction = "";
-        usdtWallet = 0.00;
-        btcWallet = 0.00;
+        currentPrice = 0.00;
+        stopTrading = false;
     }
 
     public void tradingMain() throws InterruptedException {
         BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
         BinanceApiRestClient client = factory.newRestClient();
 
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Previous Price: ");
-        previousPrice = scanner.nextDouble();
-        System.out.println("Transaction Threshold: ");
-        transactionThreshold = scanner.nextDouble();
-        System.out.println("Current usdt wallet amount");
-        usdtWallet = scanner.nextDouble();
-        currentPrice = 0.00;
-        btcWallet = 0.00;
-        lastTransaction = "sell";
+        double change;
 
-        double change = 0.0023471;
-
-        while (true){   //get the price every 30 seconds and do the subsequent actions depending on the price
+        //main loop. as long as this runs, the bot will continue to trade
+        while(!stopTrading){
             TickerStatistics tickerStatistics = client.get24HrPriceStatistics("BTCUSDT");
             currentPrice = Double.parseDouble(tickerStatistics.getLastPrice()); //get current price
 
@@ -59,7 +54,7 @@ class Trading {
                 }
                 System.out.println();
             }
-            Thread.sleep(1 * 1000);    //wait 1 second
+            Thread.sleep(tradingFrequency * 1000);    //wait 1 second
         }
     }
 
@@ -75,5 +70,10 @@ class Trading {
         btcWallet = usdtWallet / currentPrice;
         System.out.println("Bought " + btcWallet + " bitcoin for $" + usdtWallet);
         usdtWallet = 0.00;
+    }
+
+    //mutator to start/stop trading (pretty much only used to stop trading)
+    public void setStopTrading(boolean trading){
+        stopTrading = trading;
     }
 }
