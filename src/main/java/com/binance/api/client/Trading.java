@@ -36,7 +36,7 @@ class Trading {
 
         double change;  //$ difference in BTC price since last transaction
 
-        BufferedWriter logWriter = new BufferedWriter(new FileWriter(log.getAbsoluteFile()));
+        BufferedWriter logWriter = new BufferedWriter(new FileWriter(log.getPath()));
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         Date date = new Date();
@@ -67,27 +67,21 @@ class Trading {
                     System.out.println("Buying...");
                     buy(currentPrice);
                     previousPrice = currentPrice;
-                    
+
                     //log transaction
                     logWriter.write(formatter.format(date) + ',' + btcWallet + ',' + usdtWallet + ',' + currentPrice + ',' + lastTransaction + ',' + change + "\n");
                 }
             }
             Thread.sleep(tradingFrequency * 1000);    //wait 1 second
         }
+        logWriter.close();
     }
 
     //gets the file location for the log
     public void logPrompt(){
         JFileChooser fileChooser = new JFileChooser("Transaction log location");
         fileChooser.showOpenDialog(null);   //open file chooser
-        log = fileChooser.getCurrentDirectory();
-        if(!log.exists()){
-            try {
-                log.createNewFile();
-            } catch (IOException e) {
-                System.out.println("Log file creation failed");
-            }
-        }
+        log = fileChooser.getSelectedFile();
     }
 
     public void sell(double price){

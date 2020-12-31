@@ -128,7 +128,7 @@ class GUI implements ActionListener {
             try {
                 scanner = new Scanner(file);
             } catch (FileNotFoundException fileNotFoundException) {
-                System.out.println("File not found");   //TODO: Pop up error window
+                System.out.println(fileNotFoundException);   //TODO: Pop up error window
             }
             firstLine = scanner.nextLine();
             while(scanner.hasNextLine()){  //read last line of inputted file
