@@ -35,7 +35,7 @@ public class Stochastic {
         for (int i = 0; i < 14; i++) {
             double currentPrice = Double.parseDouble(tickerStatistics.getLastPrice()); //get current price
             prices[i] = currentPrice;
-            Thread.sleep(tradingFrequency * 1000);    //wait 1 second
+            Thread.sleep(tradingFrequency * 1000); //wait 1 second
         }
 
         // Need to get lowest/highest price of last 14 sessions
