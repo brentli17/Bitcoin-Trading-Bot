@@ -121,8 +121,6 @@ class GUI implements ActionListener {
             fileChooser.showOpenDialog(null);   //open file chooser
             java.io.File file = fileChooser.getSelectedFile();
 
-            System.out.println(file.getPath());
-
             String lastLine = "";   //last transaction
             String firstLine = "";  //bot settings (threshold, frequency)
 
@@ -152,10 +150,11 @@ class GUI implements ActionListener {
 
         else if(e.getSource() == a1){   //start trading
             trading = new Trading(prevPrice, threshold, usdtHeld, btcHeld, frequency, prevTransaction);
+            trading.logPrompt();
             try {
                 trading.tradingMain();
-            } catch (InterruptedException interruptedException) {
-                System.out.println("failed");
+            } catch (InterruptedException | IOException interruptedException) {
+                System.out.println(interruptedException);
             }
         }
 

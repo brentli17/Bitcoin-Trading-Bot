@@ -2,6 +2,11 @@ package com.binance.api.client;
 
 import com.binance.api.client.domain.market.TickerStatistics;
 
+import javax.swing.*;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 class Trading {
     private double previousPrice;   //price of btc in previous transaction
     private double currentPrice;    //current price of bitcoin
@@ -9,6 +14,7 @@ class Trading {
     private double btcWallet;       //currently held $ in BTC
     private double transactionThreshold; //min change in bitcoin price to warrant a transaction
     private String lastTransaction; //last transaction type that was carried out (buy/sell)
+    private java.io.File log;      //log file
     public boolean stopTrading;     //boolean to start and stop trading
     public long tradingFrequency;   //how often the bot will check the price of BTC (using binance api)
 
@@ -24,11 +30,19 @@ class Trading {
         stopTrading = false;
     }
 
-    public void tradingMain() throws InterruptedException {
+    public void tradingMain() throws InterruptedException, IOException {
         BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
         BinanceApiRestClient client = factory.newRestClient();
 
         double change;  //$ difference in BTC price since last transaction
+
+        BufferedWriter logWriter = new BufferedWriter(new FileWriter(log.getAbsoluteFile()));
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        Date date = new Date();
+
+        //write first line in log
+        logWriter.write(Double.toString(transactionThreshold) + ',' + Double.toString(tradingFrequency) + "\n");
 
         //main loop. as long as this runs, the bot will continue to trade
         while(!stopTrading){
@@ -44,15 +58,35 @@ class Trading {
                     System.out.println("Selling...");
                     sell(currentPrice);
                     previousPrice = currentPrice;
+
+                    //log transaction
+                    logWriter.write(formatter.format(date) + ',' + btcWallet + ',' + usdtWallet + ',' + currentPrice + ',' + lastTransaction + ',' + change + "\n");
                 }
                 else if(lastTransaction.equals("sell") && (change < transactionThreshold)){ //need to buy
                     System.out.println("\nCurrent Price: " + currentPrice + "    Previous Price: " + previousPrice);
                     System.out.println("Buying...");
                     buy(currentPrice);
                     previousPrice = currentPrice;
+                    
+                    //log transaction
+                    logWriter.write(formatter.format(date) + ',' + btcWallet + ',' + usdtWallet + ',' + currentPrice + ',' + lastTransaction + ',' + change + "\n");
                 }
             }
             Thread.sleep(tradingFrequency * 1000);    //wait 1 second
+        }
+    }
+
+    //gets the file location for the log
+    public void logPrompt(){
+        JFileChooser fileChooser = new JFileChooser("Transaction log location");
+        fileChooser.showOpenDialog(null);   //open file chooser
+        log = fileChooser.getCurrentDirectory();
+        if(!log.exists()){
+            try {
+                log.createNewFile();
+            } catch (IOException e) {
+                System.out.println("Log file creation failed");
+            }
         }
     }
 
