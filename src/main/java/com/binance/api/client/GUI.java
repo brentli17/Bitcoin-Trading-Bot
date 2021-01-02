@@ -55,7 +55,15 @@ class GUI implements ActionListener {
         menuBar.add(start);
         menuBar.add(action);
 
-        //set frame constraints
+        //all processes stop when frame is closed
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
+
+        //JFrame constraints
         frame.add(menuBar, BorderLayout.NORTH);
         frame.setSize(1000, 600);
         frame.setLocationRelativeTo(null);
