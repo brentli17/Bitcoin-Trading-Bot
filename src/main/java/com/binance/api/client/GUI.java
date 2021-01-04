@@ -5,15 +5,19 @@ import java.awt.*;
 import java.util.*;
 import javax.swing.*;
 import java.awt.event.*;
+import java.util.List;
 import javax.swing.border.*;
 
 class GUI implements ActionListener {
     private JMenuItem s1, s2, a1, a2;
     private JTextField t1, t2, t3, t4, t5, t6;
     private JFrame manualInputFrame;
+    private JTextArea infoBox, outputLog;
     JButton submit;
 
     private Trading trading;
+
+    private SwingWorker<Void, String> worker;
 
     //data points to display in the window
     public double threshold, btcHeld, usdtHeld, prevPrice;
@@ -55,6 +59,25 @@ class GUI implements ActionListener {
         menuBar.add(start);
         menuBar.add(action);
 
+        Font font = new Font("Monospaced", Font.PLAIN, 17);
+
+        //initialize left info box
+        infoBox = new JTextArea();
+        infoBox.setBorder(new TitledBorder(new EtchedBorder(), "General Info"));
+        infoBox.setPreferredSize(new Dimension(360,500));
+        infoBox.setEditable(false);
+        infoBox.setFont(font);
+        updateInfoBox();
+
+        //initialize right output log
+        outputLog = new JTextArea();
+        JScrollPane scroll = new JScrollPane(outputLog);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scroll.setBorder(new TitledBorder(new EtchedBorder(), "Output Log"));
+        scroll.setPreferredSize(new Dimension(480,500));
+        outputLog.setEditable(false);
+        outputLog.setFont(font);
+
         //all processes stop when frame is closed
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -65,7 +88,9 @@ class GUI implements ActionListener {
 
         //JFrame constraints
         frame.add(menuBar, BorderLayout.NORTH);
-        frame.setSize(1000, 600);
+        frame.add(infoBox, BorderLayout.WEST);
+        frame.add(scroll, BorderLayout.EAST);
+        frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
@@ -118,6 +143,23 @@ class GUI implements ActionListener {
         manualInputFrame.setVisible(true);
     }
 
+    //update the left info box with newest info
+    private void updateInfoBox(){
+        infoBox.setText(null);  //first clear previous text
+        infoBox.append("========== Bot settings ==========\n");
+        infoBox.append("Trading Threshold:       " + threshold + "\n");
+        infoBox.append("Bot Update Frequency:    " + frequency + "\n\n");
+
+        infoBox.append("========== Trading Info ==========\n");
+        infoBox.append("Current BTC Held:        " + btcHeld + "\n");
+        infoBox.append("Current USDT Held:       " + usdtHeld + "\n");
+        infoBox.append("Previous BTC Price:      " + prevPrice + "\n");
+        infoBox.append("Earnings Since Start:    " + gainSinceStart + "\n");
+        infoBox.append("Current BTC Price:       " + btcPrice + "\n");
+        infoBox.append("Previous Transaction:    " + prevTransaction + "\n");
+
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == s1){        //Start with manual input
@@ -157,6 +199,31 @@ class GUI implements ActionListener {
         }
 
         else if(e.getSource() == a1){   //start trading
+            worker = new SwingWorker<Void, String>() {
+                //process to do in background of GUI
+                @Override
+                protected Void doInBackground() throws Exception {
+
+
+                    return null;
+                }
+
+                //this will run when doInBackground is done
+                @Override
+                protected void done() {
+
+                }
+
+                //takes published strings from doInBackground and puts them in the GUI as info for the user
+                @Override
+                protected void process(List<String> log) {
+                    for(String line: log){
+
+                    }
+                }
+            };
+            worker.execute();
+
             trading = new Trading(prevPrice, threshold, usdtHeld, btcHeld, frequency, prevTransaction);
             trading.logPrompt();
             try {
@@ -168,6 +235,7 @@ class GUI implements ActionListener {
 
         else if(e.getSource() == a2){   //stop trading
             trading.setStopTrading(true);
+            worker.cancel(true);
         }
 
         else if(e.getSource() == submit){   //user wants to submit manually entered values
