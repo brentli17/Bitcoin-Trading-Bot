@@ -9,22 +9,22 @@ import java.util.List;
 import javax.swing.border.*;
 
 class GUI implements ActionListener {
+    //GUI elements
     private JMenuItem s1, s2, a1, a2;
     private JTextField t1, t2, t3, t4, t5, t6;
     private JFrame manualInputFrame;
     private JTextArea infoBox, outputLog;
-    JButton submit;
+    private JButton submit;
 
     private Trading trading;
 
     private SwingWorker<Void, String> worker;
 
     //data points to display in the window
-    public double threshold, btcHeld, usdtHeld, prevPrice;
-    public long frequency;
-    public int gainSinceStart;
-    public String btcPrice, prevTransaction;
-
+    private double threshold, btcHeld, usdtHeld, prevPrice;
+    private long frequency;
+    private int gainSinceStart;
+    private String btcPrice, prevTransaction;
 
     public void startWindow(){
         //create window
@@ -147,17 +147,16 @@ class GUI implements ActionListener {
     private void updateInfoBox(){
         infoBox.setText(null);  //first clear previous text
         infoBox.append("========== Bot settings ==========\n");
-        infoBox.append("Trading Threshold:       " + threshold + "\n");
-        infoBox.append("Bot Update Frequency:    " + frequency + "\n\n");
+        infoBox.append("Trading Threshold:       $" + threshold + "\n");
+        infoBox.append("Bot Update Frequency:    " + frequency + " sec\n\n");
 
         infoBox.append("========== Trading Info ==========\n");
-        infoBox.append("Current BTC Held:        " + btcHeld + "\n");
-        infoBox.append("Current USDT Held:       " + usdtHeld + "\n");
-        infoBox.append("Previous BTC Price:      " + prevPrice + "\n");
-        infoBox.append("Earnings Since Start:    " + gainSinceStart + "\n");
-        infoBox.append("Current BTC Price:       " + btcPrice + "\n");
+        infoBox.append("Current BTC Held:        " + btcHeld + " btc\n");
+        infoBox.append("Current USDT Held:       $" + usdtHeld + "\n");
+        infoBox.append("Previous BTC Price:      $" + prevPrice + "\n");
+        infoBox.append("Earnings Since Start:    $" + gainSinceStart + "\n");
+        infoBox.append("Current BTC Price:       $" + btcPrice + "\n");
         infoBox.append("Previous Transaction:    " + prevTransaction + "\n");
-
     }
 
     @Override
@@ -196,6 +195,8 @@ class GUI implements ActionListener {
             prevTransaction = transactionInfo[4];
             threshold = Double.parseDouble(botSettings[0]);
             frequency = Long.parseLong(botSettings[1]);
+
+            updateInfoBox();
         }
 
         else if(e.getSource() == a1){   //start trading
@@ -246,6 +247,8 @@ class GUI implements ActionListener {
             threshold = Double.parseDouble(t5.getText());
             frequency = Long.parseLong(t6.getText());
             manualInputFrame.dispose();
+
+            updateInfoBox();
         }
     }
 }

@@ -13,10 +13,10 @@ class Trading {
     private double usdtWallet;      //currently held $ in USD
     private double btcWallet;       //currently held $ in BTC
     private double transactionThreshold; //min change in bitcoin price to warrant a transaction
+    private long tradingFrequency;   //how often the bot will check the price of BTC (using binance api)
     private String lastTransaction; //last transaction type that was carried out (buy/sell)
     private java.io.File log;      //log file
-    public boolean stopTrading;     //boolean to start and stop trading
-    public long tradingFrequency;   //how often the bot will check the price of BTC (using binance api)
+    private boolean stopTrading;     //boolean to start and stop trading
 
     //constructor
     public Trading(double previousPrice, double transactionThreshold, double usdtWallet, double btcWallet, long tradingFrequency, String lastTransaction){
