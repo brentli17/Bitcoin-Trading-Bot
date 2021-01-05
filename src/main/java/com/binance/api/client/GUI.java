@@ -293,7 +293,7 @@ class GUI implements ActionListener {
                             }
                         }
                         updateInfoBox();
-                        Thread.sleep(frequency * 1000);    //wait 1 second
+                        Thread.sleep(frequency * 1000);    //wait
                     }
                 }
 
