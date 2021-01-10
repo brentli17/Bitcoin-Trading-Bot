@@ -2,25 +2,51 @@ package com.binance.api.client;
 
 import java.io.*;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.util.*;
 import javax.swing.*;
+import java.util.List;
 import java.awt.event.*;
 import javax.swing.border.*;
+import java.text.SimpleDateFormat;
+import com.binance.api.client.domain.market.TickerStatistics;
 
 class GUI implements ActionListener {
+    //GUI elements
     private JMenuItem s1, s2, a1, a2;
     private JTextField t1, t2, t3, t4, t5, t6;
     private JFrame manualInputFrame;
-    JButton submit;
+    private JTextArea infoBox, outputLog;
+    private JButton submit;
 
-    private Trading trading;
+    //log writing members
+    private java.io.File log;
+    private BufferedWriter logWriter;
+
+    //BTC trading members
+    private final BinanceApiClientFactory factory;
+    private final BinanceApiRestClient client;
+
+    //swing worker members
+    private SwingWorker<Void, String> worker;
+
+    //formatters
+    private final SimpleDateFormat formatter;
+    private final DecimalFormat btcFormat;
+    private final DecimalFormat usdtFormat;
 
     //data points to display in the window
-    public double threshold, btcHeld, usdtHeld, prevPrice;
-    public long frequency;
-    public int gainSinceStart;
-    public String btcPrice, prevTransaction;
+    private double threshold, btcHeld, usdtHeld, prevPrice, currentPrice, gainSinceStart, startingAmount;
+    private long frequency;
+    private String prevTransaction;
 
+    public GUI(){
+        factory = BinanceApiClientFactory.newInstance();
+        client = factory.newRestClient();
+        formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        btcFormat = new DecimalFormat("#.0000");
+        usdtFormat = new DecimalFormat("#.00");
+    }
 
     public void startWindow(){
         //create window
@@ -55,9 +81,38 @@ class GUI implements ActionListener {
         menuBar.add(start);
         menuBar.add(action);
 
-        //set frame constraints
+        Font font = new Font("Monospaced", Font.PLAIN, 17);
+
+        //initialize left info box
+        infoBox = new JTextArea();
+        infoBox.setBorder(new TitledBorder(new EtchedBorder(), "General Info"));
+        infoBox.setPreferredSize(new Dimension(440,500));
+        infoBox.setEditable(false);
+        infoBox.setFont(font);
+        updateInfoBox();
+
+        //initialize right output log
+        outputLog = new JTextArea();
+        JScrollPane scroll = new JScrollPane(outputLog);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scroll.setBorder(new TitledBorder(new EtchedBorder(), "Output Log"));
+        scroll.setPreferredSize(new Dimension(540,500));
+        outputLog.setEditable(false);
+        outputLog.setFont(font);
+
+        //all processes stop when frame is closed
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
+
+        //JFrame constraints
         frame.add(menuBar, BorderLayout.NORTH);
-        frame.setSize(1000, 600);
+        frame.add(infoBox, BorderLayout.WEST);
+        frame.add(scroll, BorderLayout.EAST);
+        frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
@@ -110,6 +165,48 @@ class GUI implements ActionListener {
         manualInputFrame.setVisible(true);
     }
 
+    //update the left info box with newest info
+    private void updateInfoBox(){
+        infoBox.setText(null);  //first clear previous text
+        infoBox.append("========== Bot settings ==========\n");
+        infoBox.append("Trading Threshold:       $" + usdtFormat.format(threshold) + "\n");
+        infoBox.append("Bot Update Frequency:    " + frequency + " sec\n\n");
+
+        infoBox.append("========== Trading Info ==========\n");
+        infoBox.append("Current BTC Held:        " + btcFormat.format(btcHeld) + " btc\n");
+        infoBox.append("Current USDT Held:       $" + usdtFormat.format(usdtHeld) + "\n");
+        infoBox.append("Previous BTC Price:      $" + usdtFormat.format(prevPrice) + "\n");
+        infoBox.append("Earnings Since Start:    $" + usdtFormat.format(gainSinceStart) + "\n");
+        infoBox.append("Current BTC Price:       $" + usdtFormat.format(currentPrice) + "\n");
+        infoBox.append("Previous Transaction:    " + prevTransaction + "\n");
+    }
+
+    //sell bitcoin
+    public void sell(){
+        prevTransaction = "sell";
+        usdtHeld = btcHeld * currentPrice;
+        btcHeld = 0.00;
+    }
+
+    //buy bitcoin
+    public void buy(){
+        prevTransaction = "buy";
+        btcHeld = usdtHeld / currentPrice;
+        usdtHeld = 0.00;
+    }
+
+    //open file explorer and let user choose a log file
+    public void logPrompt(){
+        JFileChooser fileChooser = new JFileChooser("Transaction log location");
+        fileChooser.showOpenDialog(null);   //open file chooser
+        log = fileChooser.getSelectedFile();
+        try {
+            logWriter = new BufferedWriter(new FileWriter(log.getPath()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == s1){        //Start with manual input
@@ -121,8 +218,6 @@ class GUI implements ActionListener {
             fileChooser.showOpenDialog(null);   //open file chooser
             java.io.File file = fileChooser.getSelectedFile();
 
-            System.out.println(file.getPath());
-
             String lastLine = "";   //last transaction
             String firstLine = "";  //bot settings (threshold, frequency)
 
@@ -130,8 +225,9 @@ class GUI implements ActionListener {
             try {
                 scanner = new Scanner(file);
             } catch (FileNotFoundException fileNotFoundException) {
-                System.out.println("File not found");   //TODO: Pop up error window
+                fileNotFoundException.printStackTrace();   //TODO: Pop up error window
             }
+            assert scanner != null;
             firstLine = scanner.nextLine();
             while(scanner.hasNextLine()){  //read last line of inputted file
                 lastLine = scanner.nextLine();
@@ -148,19 +244,87 @@ class GUI implements ActionListener {
             prevTransaction = transactionInfo[4];
             threshold = Double.parseDouble(botSettings[0]);
             frequency = Long.parseLong(botSettings[1]);
+            startingAmount = usdtHeld;
+
+            updateInfoBox();
         }
 
         else if(e.getSource() == a1){   //start trading
-            trading = new Trading(prevPrice, threshold, usdtHeld, btcHeld, frequency, prevTransaction);
-            try {
-                trading.tradingMain();
-            } catch (InterruptedException interruptedException) {
-                System.out.println("failed");
-            }
+            logPrompt();
+            worker = new SwingWorker<Void, String>() {
+                //process to do in background of GUI
+                @Override
+                protected Void doInBackground() throws Exception {
+                    Date date = new Date();
+                    double change;
+
+                    //write first line of the log
+                    logWriter.write(Double.toString(threshold) + ',' + Double.toString(frequency) + "\n");
+
+                    while(true){
+                        TickerStatistics tickerStatistics = client.get24HrPriceStatistics("BTCUSDT");
+                        currentPrice = Double.parseDouble(tickerStatistics.getLastPrice()); //get current price
+
+                        change = currentPrice - prevPrice;
+                        publish(currentPrice + " $" + change + "\n");
+
+                        if(Math.abs(change) >= threshold){
+                            if(prevTransaction.equals("buy") && (change > threshold)){   //need to sell
+                                publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
+                                publish("\nSelling...\n");
+                                publish("Sold " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                sell();
+                                prevPrice = currentPrice;
+
+                                //log transaction
+                                logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                            }
+                            else if(prevTransaction.equals("sell") && (change < threshold)){ //need to buy
+                                publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
+                                publish("\nBuying...\n");
+                                publish("Bought " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                System.out.println(usdtHeld + " " + startingAmount);
+                                gainSinceStart = usdtHeld - startingAmount;
+                                buy();
+                                prevPrice = currentPrice;
+
+                                //log transaction
+                                logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                            }
+                        }
+                        updateInfoBox();
+                        Thread.sleep(frequency * 1000);    //wait
+                    }
+                }
+
+                //this will run when doInBackground is done
+                @Override
+                protected void done() {
+                    try {
+                        logWriter.close();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
+
+                //takes published strings from doInBackground and puts them in the GUI as info for the user
+                @Override
+                protected void process(List<String> log) {
+                    for(String line: log){
+                        outputLog.append(line);
+                    }
+                }
+            };
+            worker.execute();
         }
 
         else if(e.getSource() == a2){   //stop trading
-            trading.setStopTrading(true);
+            try {
+                logWriter.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            worker.cancel(true);
         }
 
         else if(e.getSource() == submit){   //user wants to submit manually entered values
@@ -171,6 +335,8 @@ class GUI implements ActionListener {
             threshold = Double.parseDouble(t5.getText());
             frequency = Long.parseLong(t6.getText());
             manualInputFrame.dispose();
+
+            updateInfoBox();
         }
     }
 }

@@ -99,3 +99,4 @@ target/
 .*
 !/.gitignore
 /nbproject/
+src/main/java/com/binance/api/client/BTCPriceLogger.java
