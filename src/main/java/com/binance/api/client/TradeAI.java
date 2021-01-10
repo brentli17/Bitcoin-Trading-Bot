@@ -56,7 +56,6 @@ public class TradeAI {
                 System.out.print(btcPrice[i] + ", ");
             }
         }
-        System.out.print(btcPrice[19]);
-        System.out.print("]\n");
+        System.out.print(btcPrice[19] + "]\n");
     }
 }

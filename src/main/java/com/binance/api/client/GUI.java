@@ -13,7 +13,7 @@ import com.binance.api.client.domain.market.TickerStatistics;
 
 class GUI implements ActionListener {
     //GUI elements
-    private JMenuItem s1, s2, a1, a2;
+    private JMenuItem s1, s2, a1, a2, smart, dumb;
     private JTextField t1, t2, t3, t4, t5, t6;
     private JFrame manualInputFrame;
     private JTextArea infoBox, outputLog;
@@ -40,6 +40,9 @@ class GUI implements ActionListener {
     private long frequency;
     private String prevTransaction;
 
+    //Smart bot fields
+    private boolean isSmartBot;
+
     public GUI(){
         factory = BinanceApiClientFactory.newInstance();
         client = factory.newRestClient();
@@ -57,6 +60,7 @@ class GUI implements ActionListener {
         //create menu bar
         JMenuBar menuBar = new JMenuBar();
         JMenu start = new JMenu("Initialization");  //initialization menu
+        JMenu chooseBot = new JMenu("Bot Type");      //user chooses which bot
         JMenu action = new JMenu("Actions");        //actions menu
 
         //create menu items
@@ -64,21 +68,28 @@ class GUI implements ActionListener {
         s2 = new JMenuItem("Start with history log");
         a1 = new JMenuItem("Start trading");
         a2 = new JMenuItem("Stop trading");
+        smart = new JMenuItem("Smart");
+        dumb = new JMenuItem("Dumb");
 
         //add action listeners to menu items
         s1.addActionListener(this);
         s2.addActionListener(this);
         a1.addActionListener(this);
         a2.addActionListener(this);
+        start.addActionListener(this);
+        dumb.addActionListener(this);
 
         //add menu items to their menus
         start.add(s1);
         start.add(s2);
         action.add(a1);
         action.add(a2);
+        chooseBot.add(smart);
+        chooseBot.add(dumb);
 
         //add menus to the menu bar
         menuBar.add(start);
+        menuBar.add(chooseBot);
         menuBar.add(action);
 
         Font font = new Font("Monospaced", Font.PLAIN, 17);
@@ -268,28 +279,33 @@ class GUI implements ActionListener {
                         change = currentPrice - prevPrice;
                         publish(currentPrice + " $" + change + "\n");
 
-                        if(Math.abs(change) >= threshold){
-                            if(prevTransaction.equals("buy") && (change > threshold)){   //need to sell
-                                publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
-                                publish("\nSelling...\n");
-                                publish("Sold " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
-                                sell();
-                                prevPrice = currentPrice;
+                        if(isSmartBot){
+                            
+                        }
+                        else{
+                            if(Math.abs(change) >= threshold){
+                                if(prevTransaction.equals("buy") && (change > threshold)){   //need to sell
+                                    publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
+                                    publish("\nSelling...\n");
+                                    publish("Sold " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                    sell();
+                                    prevPrice = currentPrice;
 
-                                //log transaction
-                                logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
-                            }
-                            else if(prevTransaction.equals("sell") && (change < threshold)){ //need to buy
-                                publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
-                                publish("\nBuying...\n");
-                                publish("Bought " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
-                                System.out.println(usdtHeld + " " + startingAmount);
-                                gainSinceStart = usdtHeld - startingAmount;
-                                buy();
-                                prevPrice = currentPrice;
+                                    //log transaction
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                }
+                                else if(prevTransaction.equals("sell") && (change < threshold)){ //need to buy
+                                    publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
+                                    publish("\nBuying...\n");
+                                    publish("Bought " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                    System.out.println(usdtHeld + " " + startingAmount);
+                                    gainSinceStart = usdtHeld - startingAmount;
+                                    buy();
+                                    prevPrice = currentPrice;
 
-                                //log transaction
-                                logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                    //log transaction
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                }
                             }
                         }
                         updateInfoBox();
@@ -337,6 +353,14 @@ class GUI implements ActionListener {
             manualInputFrame.dispose();
 
             updateInfoBox();
+        }
+
+        else if(e.getSource() == smart){    //user chose to use the EMA/SMA bot
+            isSmartBot = true;
+        }
+
+        else if (e.getSource() == dumb){    //user chose to use the dumb bot
+            isSmartBot = false;
         }
     }
 }
