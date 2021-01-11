@@ -2,42 +2,46 @@ package com.binance.api.client;
 
 public class TradeAI {
     double[] btcPrice;
+    int period;
 
-    public TradeAI(){
+    public TradeAI(int period){
         btcPrice = new double[]{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+        this.period = period;
     }
 
     //EMA
-
     // For period 21, prevAvg = SMA calculated for last 20 periods
     // After period 21, prevAvg = previous EMA
-    public double calculateEMA(double currPrice, double prevAvg, double periodNum) {
+    public double calculateEMA(double currPrice, double prevAvg) {
         //prevAvg = previous period's SMA or EMA
         //double k = 9.5238;
-        double k = 2 / (periodNum + 1);
 
-        double EMA = (k * (currPrice - prevAvg)) + prevAvg;
-        return EMA;
+        double k = 2 / (period + 1.0);
+        return((k * (currPrice - prevAvg)) + prevAvg);
     }
 
     //SMA
     //add an element onto the end of the btcPrice array, if it is full, shift all elements to the left and add onto the end
     public void add(double price){
-        //scan through btcPrice and find the first open spot, if not found, array is full and first item needs to be removed
-        for(int i = 0; i < 20; i++){
-            if(btcPrice[i] == -1){  //empty spot found, set price
-                btcPrice[i] = price;
-                return;
+        if(smaIsFull()){    //array already contains 20 data points
+            for(int i = 0; i < period - 1; i++){    //shift elements left by 1
+                btcPrice[i] = btcPrice[i + 1];
+            }
+            btcPrice[period - 1] = price;   //add price to the end of the array
+        }
+        else{   //scan through btcPrice and find the first open spot, if not found, array is full and first item needs to be removed
+            for(int i = 0; i < period; i++){
+                if(btcPrice[i] == -1){  //empty spot found, set price
+                    btcPrice[i] = price;
+                    return;
+                }
             }
         }
-        for(int i = 0; i < 19; i++){    //shift elements left by 1
-            btcPrice[i] = btcPrice[i + 1];
-        }
-        btcPrice[19] = price;   //add price to the end of the array
     }
 
+    //return true if btcPrice already has 20 data points, false if not
     public boolean smaIsFull(){
-        for(int i = 0; i < 20; i++){
+        for(int i = 0; i < period; i++){
             if(btcPrice[i] == -1){
                 return false;
             }
@@ -48,20 +52,20 @@ public class TradeAI {
     //averages all elements in btcPrice
     public double average(){
         double sum = 0;
-        for(int i = 0; i < 20; i++){
+        for(int i = 0; i < period; i++){
             sum += btcPrice[i];
         }
-        return (sum / 20);
+        return (sum / period);
     }
 
     //displays btcPrice
     public void displayHistory(){
         System.out.print("[");
-        for(int i = 0; i < 19; i++){
+        for(int i = 0; i < period - 1; i++){
             if(btcPrice[i] != -1){
                 System.out.print(btcPrice[i] + ", ");
             }
         }
-        System.out.print(btcPrice[19] + "]\n");
+        System.out.print(btcPrice[period - 1] + "]\n");
     }
 }

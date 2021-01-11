@@ -272,7 +272,7 @@ class GUI implements ActionListener {
                     //write first line of the log
                     logWriter.write(Double.toString(threshold) + ',' + Double.toString(frequency) + "\n");
 
-                    TradeAI tradeAI = new TradeAI();
+                    TradeAI tradeAI = new TradeAI(20);
 
                     int periodNum = 0;
 
@@ -296,11 +296,11 @@ class GUI implements ActionListener {
                             if(tradeAI.smaIsFull()){
                                 sma = tradeAI.average();
                                 if(periodNum < 21){
-                                    ema = tradeAI.calculateEMA(currentPrice, sma, 20);
+                                    ema = tradeAI.calculateEMA(currentPrice, sma);
                                 }
                                 else if (periodNum > 21){
                                     double temp = ema;
-                                    ema = tradeAI.calculateEMA(currentPrice, temp, 20);
+                                    ema = tradeAI.calculateEMA(currentPrice, temp);
                                 }
 
                                 if(sma >= ema && prevTransaction.equals("buy")){   //need to sell
