@@ -19,3 +19,8 @@ In case of an unexpected shutdown, the bot logs its transaction history in a .tx
 - Jared Yen
 - Brent Li
 - Tristan Troung
+
+*Files were forked from the API. The bot consists of the following 3 files: 
+Bitcoin-trading-bot/src/main/java/com/binance/api/client/GUI.java
+Bitcoin-trading-bot/src/main/java/com/binance/api/client/Main.java
+Bitcoin-trading-bot/src/main/java/com/binance/api/client/TradeAI.java*
