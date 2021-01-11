@@ -5,7 +5,10 @@ public class TradeAI {
     int period;
 
     public TradeAI(int period){
-        btcPrice = new double[]{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+        btcPrice = new double[period];
+        for (int i = 0; i < period; i++){
+            btcPrice[i] = -1;
+        }
         this.period = period;
     }
 
