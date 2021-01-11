@@ -12,11 +12,11 @@ public class TradeAI {
     // For period 21, prevAvg = SMA calculated for last 20 periods
     // After period 21, prevAvg = previous EMA
     public double calculateEMA(double currPrice, double prevAvg, double periodNum) {
-        // prevAvg = previous period's SMA or EMA
-        double k = 9.5238;
-        //double k = 2 / (periodNum + 1);
+        //prevAvg = previous period's SMA or EMA
+        //double k = 9.5238;
+        double k = 2 / (periodNum + 1);
 
-        double EMA = (9.5238 / (currPrice - prevAvg)) + prevAvg;
+        double EMA = (k * (currPrice - prevAvg)) + prevAvg;
         return EMA;
     }
 
