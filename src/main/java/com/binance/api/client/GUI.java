@@ -76,7 +76,7 @@ class GUI implements ActionListener {
         s2.addActionListener(this);
         a1.addActionListener(this);
         a2.addActionListener(this);
-        start.addActionListener(this);
+        smart.addActionListener(this);
         dumb.addActionListener(this);
 
         //add menu items to their menus
@@ -272,6 +272,13 @@ class GUI implements ActionListener {
                     //write first line of the log
                     logWriter.write(Double.toString(threshold) + ',' + Double.toString(frequency) + "\n");
 
+                    TradeAI tradeAI = new TradeAI();
+
+                    int periodNum = 0;
+
+                    double ema = 0.0;
+                    double sma = 0.0;
+
                     while(true){
                         TickerStatistics tickerStatistics = client.get24HrPriceStatistics("BTCUSDT");
                         currentPrice = Double.parseDouble(tickerStatistics.getLastPrice()); //get current price
@@ -279,10 +286,48 @@ class GUI implements ActionListener {
                         change = currentPrice - prevPrice;
                         publish(currentPrice + " $" + change + "\n");
 
-                        if(isSmartBot){
-                            
+                        if(isSmartBot){ //smart bot trading logic
+                            tradeAI.add(currentPrice);
+
+                            periodNum++;
+
+                            System.out.println("EMA: " + btcFormat.format(ema) + "    SMA: " + btcFormat.format(sma));
+
+                            if(tradeAI.smaIsFull()){
+                                sma = tradeAI.average();
+                                if(periodNum < 21){
+                                    ema = tradeAI.calculateEMA(currentPrice, sma, 20);
+                                }
+                                else if (periodNum > 21){
+                                    double temp = ema;
+                                    ema = tradeAI.calculateEMA(currentPrice, temp, 20);
+                                }
+
+                                if(sma >= ema && prevTransaction.equals("buy")){   //need to sell
+                                    publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
+                                    publish("\nSelling...\n");
+                                    publish("Sold " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                    sell();
+                                    prevPrice = currentPrice;
+
+                                    //log transaction
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                }
+                                else if(sma <= ema && prevTransaction.equals("sell")){ //need to buy
+                                    publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
+                                    publish("\nBuying...\n");
+                                    publish("Bought " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                    System.out.println(usdtHeld + " " + startingAmount);
+                                    gainSinceStart = usdtHeld - startingAmount;
+                                    buy();
+                                    prevPrice = currentPrice;
+
+                                    //log transaction
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                }
+                            }
                         }
-                        else{
+                        else{   //dumb bot trading logic
                             if(Math.abs(change) >= threshold){
                                 if(prevTransaction.equals("buy") && (change > threshold)){   //need to sell
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
