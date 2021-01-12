@@ -36,7 +36,7 @@ class GUI implements ActionListener {
     private final DecimalFormat usdtFormat;
 
     //data points to display in the window
-    private double threshold, btcHeld, usdtHeld, prevPrice, currentPrice, gainSinceStart, startingAmount;
+    private double threshold, btcHeld, displayBTC, usdtHeld, displayUSDT, prevPrice, currentPrice, gainSinceStart, startingAmount;
     private long frequency;
     private String prevTransaction;
 
@@ -184,8 +184,8 @@ class GUI implements ActionListener {
         infoBox.append("Bot Update Frequency:    " + frequency + " sec\n\n");
 
         infoBox.append("========== Trading Info ==========\n");
-        infoBox.append("Current BTC Held:        " + btcFormat.format(btcHeld) + " btc\n");
-        infoBox.append("Current USDT Held:       $" + usdtFormat.format(usdtHeld) + "\n");
+        infoBox.append("Current BTC Held:        " + btcFormat.format(displayBTC) + " btc\n");
+        infoBox.append("Current USDT Held:       $" + usdtFormat.format(displayUSDT) + "\n");
         infoBox.append("Previous BTC Price:      $" + usdtFormat.format(prevPrice) + "\n");
         infoBox.append("Earnings Since Start:    $" + usdtFormat.format(gainSinceStart) + "\n");
         infoBox.append("Current BTC Price:       $" + usdtFormat.format(currentPrice) + "\n");
@@ -204,6 +204,12 @@ class GUI implements ActionListener {
         prevTransaction = "buy";
         btcHeld = usdtHeld / currentPrice;
         usdtHeld = 0.00;
+    }
+
+    //return price of bitcoin
+    public double getPrice(){
+        TickerStatistics tickerStatistics = client.get24HrPriceStatistics("BTCUSDT");
+        return (Double.parseDouble(tickerStatistics.getLastPrice()));
     }
 
     //open file explorer and let user choose a log file
@@ -255,7 +261,16 @@ class GUI implements ActionListener {
             prevTransaction = transactionInfo[4];
             threshold = Double.parseDouble(botSettings[0]);
             frequency = Long.parseLong(botSettings[1]);
-            startingAmount = usdtHeld;
+
+            if(btcHeld == 0){   //user starts out with USD
+                displayUSDT = usdtHeld;
+                displayBTC = displayUSDT / getPrice();
+            }
+            else{   //user starts out with BTC
+                displayBTC = btcHeld;
+                displayUSDT = displayBTC * getPrice();
+            }
+            startingAmount = displayUSDT;
 
             updateInfoBox();
         }
@@ -280,11 +295,10 @@ class GUI implements ActionListener {
                     double sma = 0.0;
 
                     while(true){
-                        TickerStatistics tickerStatistics = client.get24HrPriceStatistics("BTCUSDT");
-                        currentPrice = Double.parseDouble(tickerStatistics.getLastPrice()); //get current price
+                        currentPrice = getPrice(); //get current price
 
                         change = currentPrice - prevPrice;
-                        publish(currentPrice + " $" + change + "\n");
+                        publish(currentPrice + " $" + usdtFormat.format(change) + "\n");
 
                         if(isSmartBot){ //smart bot trading logic
                             tradeAI.add(currentPrice);
@@ -305,9 +319,13 @@ class GUI implements ActionListener {
 
                                 if(sma >= ema && prevTransaction.equals("buy")){   //need to sell
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
-                                    publish("\nSelling...\n");
-                                    publish("Sold " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                    publish("\nSelling...\n\n");
                                     sell();
+
+                                    //update left window stats
+                                    displayUSDT = usdtHeld;
+                                    displayBTC = displayUSDT / currentPrice;
+
                                     prevPrice = currentPrice;
 
                                     //log transaction
@@ -315,12 +333,13 @@ class GUI implements ActionListener {
                                 }
                                 else if(sma <= ema && prevTransaction.equals("sell")){ //need to buy
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
-                                    publish("\nBuying...\n");
-                                    publish("Bought " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
-                                    System.out.println(usdtHeld + " " + startingAmount);
-                                    gainSinceStart = usdtHeld - startingAmount;
+                                    publish("\nBuying...\n\n");
                                     buy();
                                     prevPrice = currentPrice;
+
+                                    //update left window stats
+                                    displayBTC = btcHeld;
+                                    displayUSDT = displayBTC * getPrice();
 
                                     //log transaction
                                     logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
@@ -331,28 +350,33 @@ class GUI implements ActionListener {
                             if(Math.abs(change) >= threshold){
                                 if(prevTransaction.equals("buy") && (change > threshold)){   //need to sell
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
-                                    publish("\nSelling...\n");
-                                    publish("Sold " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
+                                    publish("\nSelling...\n\n");
                                     sell();
                                     prevPrice = currentPrice;
+
+                                    //update left window stats
+                                    displayUSDT = usdtHeld;
+                                    displayBTC = displayUSDT / currentPrice;
 
                                     //log transaction
                                     logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
                                 }
                                 else if(prevTransaction.equals("sell") && (change < threshold)){ //need to buy
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
-                                    publish("\nBuying...\n");
-                                    publish("Bought " + btcHeld + " bitcoin for $" + usdtHeld + "\n\n");
-                                    System.out.println(usdtHeld + " " + startingAmount);
-                                    gainSinceStart = usdtHeld - startingAmount;
+                                    publish("\nBuying...\n\n");
                                     buy();
                                     prevPrice = currentPrice;
+
+                                    //update left window stats
+                                    displayBTC = btcHeld;
+                                    displayUSDT = displayBTC * getPrice();
 
                                     //log transaction
                                     logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
                                 }
                             }
                         }
+                        gainSinceStart = displayUSDT - startingAmount;
                         updateInfoBox();
                         Thread.sleep(frequency * 1000);    //wait
                     }
@@ -396,6 +420,15 @@ class GUI implements ActionListener {
             threshold = Double.parseDouble(t5.getText());
             frequency = Long.parseLong(t6.getText());
             manualInputFrame.dispose();
+
+            if(btcHeld == 0){   //user starts out with USD
+                displayUSDT = usdtHeld;
+                displayBTC = displayUSDT / getPrice();
+            }
+            else{   //user starts out with BTC
+                displayBTC = btcHeld;
+                displayUSDT = displayBTC * getPrice();
+            }
 
             updateInfoBox();
         }
