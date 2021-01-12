@@ -47,7 +47,7 @@ class GUI implements ActionListener {
         factory = BinanceApiClientFactory.newInstance();
         client = factory.newRestClient();
         formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        btcFormat = new DecimalFormat("#.0000");
+        btcFormat = new DecimalFormat("#.000000");
         usdtFormat = new DecimalFormat("#.00");
     }
 
