@@ -329,7 +329,7 @@ class GUI implements ActionListener {
                                     prevPrice = currentPrice;
 
                                     //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                                 else if(sma <= ema && prevTransaction.equals("sell")){ //need to buy
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
@@ -342,7 +342,7 @@ class GUI implements ActionListener {
                                     displayUSDT = displayBTC * getPrice();
 
                                     //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                             }
                         }
@@ -359,7 +359,7 @@ class GUI implements ActionListener {
                                     displayBTC = displayUSDT / currentPrice;
 
                                     //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                                 else if(prevTransaction.equals("sell") && (change < threshold)){ //need to buy
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
@@ -372,7 +372,7 @@ class GUI implements ActionListener {
                                     displayUSDT = displayBTC * getPrice();
 
                                     //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + change + "\n");
+                                    logWriter.write(formatter.format(date) + ',' + btcHeld + ',' + usdtHeld + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                             }
                         }
