@@ -22,6 +22,7 @@ class GUI implements ActionListener {
     //log writing members
     private java.io.File log;
     private BufferedWriter logWriter;
+    private Date date;
 
     //BTC trading members
     private final BinanceApiClientFactory factory;
@@ -193,17 +194,39 @@ class GUI implements ActionListener {
     }
 
     //sell bitcoin
-    public void sell(){
+    public void sell() throws IOException {
         prevTransaction = "sell";
         usdtHeld = btcHeld * currentPrice;
         btcHeld = 0.00;
+
+        prevPrice = currentPrice;
+
+        //update left window stats
+        displayUSDT = usdtHeld;
+        displayBTC = displayUSDT / currentPrice;
+
+        //log transaction
+        logWriter = new BufferedWriter(new FileWriter(log.getPath(), true));
+        logWriter.write(formatter.format(date) + ',' + displayBTC + ',' + displayUSDT + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
+        logWriter.close();
     }
 
     //buy bitcoin
-    public void buy(){
+    public void buy() throws IOException {
         prevTransaction = "buy";
         btcHeld = usdtHeld / currentPrice;
         usdtHeld = 0.00;
+
+        prevPrice = currentPrice;
+
+        //update left window stats
+        displayBTC = btcHeld;
+        displayUSDT = displayBTC * getPrice();
+
+        //log transaction
+        logWriter = new BufferedWriter(new FileWriter(log.getPath(), true));
+        logWriter.write(formatter.format(date) + ',' + displayBTC + ',' + displayUSDT + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
+        logWriter.close();
     }
 
     //return price of bitcoin
@@ -262,7 +285,8 @@ class GUI implements ActionListener {
             threshold = Double.parseDouble(botSettings[0]);
             frequency = Long.parseLong(botSettings[1]);
 
-            if(btcHeld == 0){   //user starts out with USD
+            if(btcHeld == 0.0){   //user starts out with USD
+                System.out.println("here");
                 displayUSDT = usdtHeld;
                 displayBTC = displayUSDT / getPrice();
             }
@@ -281,7 +305,6 @@ class GUI implements ActionListener {
                 //process to do in background of GUI
                 @Override
                 protected Void doInBackground() throws Exception {
-                    Date date = new Date();
                     double change;
 
                     //write first line of the log
@@ -295,6 +318,9 @@ class GUI implements ActionListener {
                     double sma = 0.0;
 
                     while(true){
+                        System.out.println("Starting: " + startingAmount + "     Display: " + displayUSDT + "    Change: " + (displayUSDT - startingAmount));
+
+                        date = new Date();
                         currentPrice = getPrice(); //get current price
 
                         change = currentPrice - prevPrice;
@@ -321,28 +347,11 @@ class GUI implements ActionListener {
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
                                     publish("\nSelling...\n\n");
                                     sell();
-
-                                    //update left window stats
-                                    displayUSDT = usdtHeld;
-                                    displayBTC = displayUSDT / currentPrice;
-
-                                    prevPrice = currentPrice;
-
-                                    //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + displayBTC + ',' + displayUSDT + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                                 else if(sma <= ema && prevTransaction.equals("sell")){ //need to buy
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
                                     publish("\nBuying...\n\n");
                                     buy();
-                                    prevPrice = currentPrice;
-
-                                    //update left window stats
-                                    displayBTC = btcHeld;
-                                    displayUSDT = displayBTC * getPrice();
-
-                                    //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + displayBTC + ',' + displayUSDT + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                             }
                         }
@@ -352,27 +361,11 @@ class GUI implements ActionListener {
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
                                     publish("\nSelling...\n\n");
                                     sell();
-                                    prevPrice = currentPrice;
-
-                                    //update left window stats
-                                    displayUSDT = usdtHeld;
-                                    displayBTC = displayUSDT / currentPrice;
-
-                                    //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + displayBTC + ',' + displayUSDT + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                                 else if(prevTransaction.equals("sell") && (change < threshold)){ //need to buy
                                     publish("\nCurrent Price: " + currentPrice + "    Previous Price: " + prevPrice);
                                     publish("\nBuying...\n\n");
                                     buy();
-                                    prevPrice = currentPrice;
-
-                                    //update left window stats
-                                    displayBTC = btcHeld;
-                                    displayUSDT = displayBTC * getPrice();
-
-                                    //log transaction
-                                    logWriter.write(formatter.format(date) + ',' + displayBTC + ',' + displayUSDT + ',' + currentPrice + ',' + prevTransaction + ',' + gainSinceStart + "\n");
                                 }
                             }
                         }
@@ -429,6 +422,8 @@ class GUI implements ActionListener {
                 displayBTC = btcHeld;
                 displayUSDT = displayBTC * getPrice();
             }
+
+            startingAmount = displayUSDT;
 
             updateInfoBox();
         }
