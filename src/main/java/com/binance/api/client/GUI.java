@@ -196,7 +196,7 @@ class GUI implements ActionListener {
     //sell bitcoin
     public void sell() throws IOException {
         prevTransaction = "sell";
-        usdtHeld = btcHeld * currentPrice;
+        usdtHeld = btcHeld * currentPrice - (btcHeld * 0.001);  //accounting for a 0.1% trading fee
         btcHeld = 0.00;
 
         prevPrice = currentPrice;
@@ -215,6 +215,7 @@ class GUI implements ActionListener {
     public void buy() throws IOException {
         prevTransaction = "buy";
         btcHeld = usdtHeld / currentPrice;
+        btcHeld = btcHeld - (btcHeld * 0.001);  //accounting for a 0.1% trading fee
         usdtHeld = 0.00;
 
         prevPrice = currentPrice;
